@@ -4,6 +4,5 @@ node_modules/
 *.ase
 *.zip
 *.tsk
-package.json
 package-lock.json
 .vscode/
