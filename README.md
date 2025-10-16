@@ -13,8 +13,8 @@ A flappy bird clone that uses html canvas.
 node server.js
 ```
 
-2. **Run the backend**
-
+2. **Run the backend** 
+(in another terminal)
 ```
 node Backend/backend.cjs
 ```
