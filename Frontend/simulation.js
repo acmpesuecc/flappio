@@ -268,7 +268,7 @@ class RodObject extends GameObject {
     rod_gap = 650  // TODO convert to fraction
     rod_scale = .4
 
-    img_promise = getImage("sprites/rod.png")
+    img_promise = getImage("../Sprites/rod.png")
     
     constructor(pos) {
         super(pos, [0, 0], 10, 10)
@@ -351,7 +351,7 @@ class BirdObject extends GameObject {
     tap_speed = -.026
     // tap_speed = -.006
 
-    img_promise = getImage("sprites/bird not angry big.png")
+    img_promise = getImage("../Sprites/bird not angry big.png")
 
     constructor(pos, vel) {
         super(pos, vel)
