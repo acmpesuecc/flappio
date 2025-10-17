@@ -1,0 +1,49 @@
+/* leaderboard.css */
+
+body {
+    font-family: 'Fascinate', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #63a69f, #fbecc2); /* Springtime colors */
+    color: #333; /* Dark text for better readability */
+}
+
+#table {
+    margin: 0 auto;
+    max-width: 600px;
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Styling for leaderboard title */
+h1 {
+    text-align: center;
+    font-size: 28px;
+    color: #333;
+}
+
+/* Define styles for your leaderboard table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #63a69f; /* Light green background for table header */
+    color: #fff;
+}
+
+tr:nth-child(even) {
+    background-color: #fbecc2; /* Light yellow background for even rows */
+}
