@@ -1,0 +1,19 @@
+{
+  "name": "flappio",
+  "version": "1.0.0",
+  "description": "A flappy bird clone that uses html canvas.",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "mongodb": "^4.11.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
