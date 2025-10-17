@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Effects Test</title>
+    <script src="sounds.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .mute-btn {
+            background: #f44336;
+        }
+        .mute-btn:hover {
+            background: #da190b;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #ffeb3b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Flappy Bird Sound Effects Test</h1>
+    
+    <div class="controls">
+        <h2>Volume Control</h2>
+        <label for="volumeSlider">Volume: </label>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+        <span id="volumeDisplay">50%</span>
+        <br><br>
+        <button class="mute-btn" onclick="toggleMute()">🔇 Toggle Mute</button>
+    </div>
+
+    <h2>🎮 Game Sound Effects</h2>
+    <button onclick="playJumpSound()">🐦 Jump Sound</button>
+    <button onclick="playPointSound()">🎯 Point Sound</button>
+    <button onclick="playWhooshSound()">💨 Whoosh Sound</button>
+    <button onclick="playCollisionSound()">💥 Collision Sound</button>
+    <button onclick="playGameStartSound()">🎮 Game Start Sound</button>
+    <button onclick="playGameOverSound()">😵 Game Over Sound</button>
+
+    <h2>🎼 Sound Combinations</h2>
+    <button onclick="playSuccessCombo()">🏆 Success Combo</button>
+    <button onclick="playFailureCombo()">💔 Failure Combo</button>
+
+    <div class="controls">
+        <h2>About These Sounds</h2>
+        <ul>
+            <li><strong>Jump Sound:</strong> Played when the bird flaps its wings</li>
+            <li><strong>Point Sound:</strong> Musical chord when scoring a point</li>
+            <li><strong>Whoosh Sound:</strong> Air movement when passing through pipes</li>
+            <li><strong>Collision Sound:</strong> Noise burst when hitting obstacles</li>
+            <li><strong>Game Start:</strong> Uplifting chord when game begins</li>
+            <li><strong>Game Over:</strong> Descending tones for game end</li>
+        </ul>
+    </div>
+
+    <script>
+        // Volume control
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = parseFloat(e.target.value);
+            setGameVolume(volume);
+            volumeDisplay.textContent = Math.round(volume * 100) + '%';
+        });
+
+        // Mute toggle
+        let isMuted = false;
+        function toggleMute() {
+            isMuted = toggleGameMute();
+            const btn = document.querySelector('.mute-btn');
+            btn.textContent = isMuted ? '🔊 Unmute' : '🔇 Mute';
+            btn.style.background = isMuted ? '#f44336' : '#4CAF50';
+        }
+
+        // Sound combinations
+        function playSuccessCombo() {
+            playPointSound();
+            setTimeout(() => playWhooshSound(), 200);
+        }
+
+        function playFailureCombo() {
+            playCollisionSound();
+            setTimeout(() => playGameOverSound(), 300);
+        }
+
+        // Instructions
+        console.log('Sound Effects Test Loaded');
+        console.log('Click the buttons to test different sound effects');
+        console.log('Use the volume slider to adjust loudness');
+        console.log('Use the mute button to toggle sound on/off');
+    </script>
+</body>
+</html>
