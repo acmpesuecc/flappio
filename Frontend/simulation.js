@@ -368,26 +368,21 @@ class BirdObject extends GameObject {
         this.img_promise.then(this.set_canvas)
     }
 
-    tick() {
+    tick(queue, now) { // Step 1: Add queue and now
         if (D_MOVING_BIRD) {
             this.pos[0] += this.vel[0]
             this.pos[1] += this.vel[1]
         }
 
         this.vel[1] += GRAVITY
-        // console.log("BIRD p & v", this.pos[1], this.vel[1])
 
-        // console.log("OBJ", screen.width*this.pos[0], screen.height*this.pos[1])
-        
-        if (this.pos[1] > this.auto_thresh) {
-            // Bird hit the ground, play a subtle thud sound
-            if (this.vel[1] > 0) { // Only play sound when bird is moving downward
-                soundManager.playSound('collision'); // Reuse collision sound for ground hit
-            }
-            this.vel[1] = this.tap_speed;
+        // Step 2: Add the new collision check
+        // If the bird's vertical position is past the bottom of the screen (e.g., > 1.0)
+        if (this.pos[1] > 1.0) {
+            queue.push(new GameEvent('Hit', now + 15)); // Push a 'Hit' event
+            return false; // The bird object should be removed
         }
-        // if (this.pos[1] > this.auto_thresh) this.vel[1] = -Math.abs(this.vel[1]);
-        // if (this.pos[1] < 0) this.vel[1] = Math.abs(this.vel[1]);
+
         return true;
     }
 }
