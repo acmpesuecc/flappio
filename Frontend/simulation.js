@@ -24,6 +24,7 @@ var url = 'localhost:3001/'
 var post_path = 'leaderboard'
 
 function simulate(queue, start_time) {
+    game_score = 0; // Reset the score at the start of each game.
     const MAX_EVENT_DELAY = 1200
 
     event_generator(queue, start_time);
@@ -404,5 +405,3 @@ class BlankObject extends GameObject {
         // console.log(this, ":- Image has been drawn")
     }
 }
-
-

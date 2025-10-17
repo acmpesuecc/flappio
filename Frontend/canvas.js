@@ -45,6 +45,13 @@ function init() {
 
     setInterval(() => {
         render_entities(entities, b_ctx)
+        
+        // Change the color of the score to red
+        b_ctx.fillStyle = 'red';
+        b_ctx.font = '40px Fascinate, cursive';
+        b_ctx.textAlign = 'center';
+        b_ctx.fillText(game_score, canvas.width / 2, 50);
+
         let data = b_ctx.getImageData(0, 0, canvas.width, canvas.height);
         requestAnimationFrame(() => {
             ctx.putImageData(data, 0, 0)
