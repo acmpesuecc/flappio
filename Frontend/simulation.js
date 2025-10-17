@@ -359,7 +359,7 @@ class BirdObject extends GameObject {
         this.img_promise.then(this.set_canvas)
     }
 
-    tick() {
+    tick(queue, now) {
         if (D_MOVING_BIRD) {
             this.pos[0] += this.vel[0]
             this.pos[1] += this.vel[1]
@@ -367,7 +367,11 @@ class BirdObject extends GameObject {
 
         this.vel[1] += GRAVITY
         // console.log("BIRD p & v", this.pos[1], this.vel[1])
-
+        if (this.pos[1] > 1.0) {
+            queue.push(new GameEvent('Hit', now + 15, {
+                bird: this
+            }))
+        }
         // console.log("OBJ", screen.width*this.pos[0], screen.height*this.pos[1])
         
         if (this.pos[1] > this.auto_thresh) this.vel[1] = this.tap_speed;
