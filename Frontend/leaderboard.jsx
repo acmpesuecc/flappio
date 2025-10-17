@@ -6,8 +6,8 @@ class App extends React.Component{
     constructor(props) {
         super(props)
         this.state = {
-            // values: [{"IP":"127.0.0.1","score":230},{"IP":"10.1.0.5","score":100},{"IP":"0.0.0.0","score":70},{"IP":"9.0.0.1","score":7}]
-            values: []
+            values: [{"IP":"127.0.0.1","score":230},{"IP":"10.1.0.5","score":100},{"IP":"0.0.0.0","score":70},{"IP":"9.0.0.1","score":7}]
+            //values: []
         }
         fetch(`http://${url+get_path}`, {
             method: "get",
@@ -45,18 +45,18 @@ class App extends React.Component{
     }
     render() {
         var i = 0;
-        let tstyle = {border: "3px solid black",borderRadius: '10px', margin: "0px", padding: "0px", textAlign:'center', margin:'100px auto auto auto', padding:'17.5px', fontSize:'25px',fontFamily: "Times New Roman"}
-        let tstyle2= {border: "0px solid black",borderRadius: '10px', margin: "0px", padding: "0px", textAlign:'center', margin:'100px auto auto auto', padding:'17.5px', fontSize:'25px',fontFamily: "Times New Roman"}
+        let tstyle = {border: "3px solid #817f7fff",borderRadius: '10px', margin: "0px", padding: "0px", textAlign:'center', margin:'100px auto auto auto', padding:'17.5px', fontSize:'25px',fontFamily: "Times New Roman"}
+        let tstyle2= {border: "3px solid #fd8528ff",borderRadius: '10px', margin: "0px", padding: "0px", textAlign:'center', margin:'100px auto auto auto', padding:'17.5px', fontSize:'25px',fontFamily: "Times New Roman"}
         let list = this.state.values.map(x=>{
             i++
             return <tr style={tstyle} key={i}><td style={tstyle}>{x.IP}</td><td style={tstyle}>{x.score}</td></tr>
         })
-        return <div style={{backgroundImage: 'url(/Sprites/BG.png)', backgroundSize: "contain", height: screen.height, margin: 0, textAlign:"center"}}>
-            <button style={{backgroundColor: "#e56400", fontSize:'50px',fontFamily: "Times New Roman", borderRadius:'10px'}}><a href="index.html" style={{backgroundColor: "#e56400", textDecoration: "", fontSize:'50px',fontFamily: "Times New Roman", borderRadius:'10px'}}>PLAY AGAIN</a></button>
+        return <div style={{backgroundImage: 'url(/Sprites/BG.png)', backgroundSize: "contain", height: screen.height, width:screen.width, margin: 0, textAlign:"center", backgroundRepeat:"no-repeat", backgroundSize:"cover"}}>
+            <button style={{backgroundColor: "#e56400", fontSize:'50px',fontFamily: "Times New Roman", borderRadius:'10px', marginTop:'10%'}}><a href="/" style={{backgroundColor: "#e56400", textDecoration: "", fontSize:'50px',fontFamily: "Times New Roman", borderRadius:'10px'}}>PLAY AGAIN</a></button>
         
             <table style={tstyle2}>
             <tbody>
-                <th>IP</th><th>hi score</th>
+                <th>IP</th><th>High Score</th>
                 {list}
             </tbody>
             </table>
