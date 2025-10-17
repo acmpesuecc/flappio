@@ -27,6 +27,9 @@ function simulate(queue, start_time) {
     const MAX_EVENT_DELAY = 1200
 
     event_generator(queue, start_time);
+    
+    // Play game start sound
+    playGameStartSound();
 
     let entities = []
     let birds = []
@@ -150,6 +153,7 @@ function handleGameEvent(event, entities, birds) {
         break;
     case 'Bird':
         // console.log("Bird Tap!")
+        playJumpSound(); // Play jump sound when bird flaps
         for (let bird of birds) {
             bird.vel[1] = bird.tap_speed
             // bird.vel[1] += .001
@@ -165,12 +169,14 @@ function handleGameEvent(event, entities, birds) {
         break;
     case 'Hit':
         console.log("COLLISION")
+        playCollisionSound(); // Play collision sound
+        playGameOverSound(); // Play game over sound
         if (D_MOVING_BIRD) {
             entities.push(new BlankObject());
             send_score(game_score).then(()=>{
-                window.location.href = '/leaderboard.html'
+                window.location.href = 'leaderboard.html'
             }).catch(()=>{
-                window.location.href = '/leaderboard.html'
+                window.location.href = 'leaderboard.html'
             })
         }
         break;
@@ -178,6 +184,8 @@ function handleGameEvent(event, entities, birds) {
     case 'Miss':
         if (last_rod_id === event.props.rod_id) return;
         game_score++;
+        playPointSound(); // Play point sound when scoring
+        playWhooshSound(); // Play whoosh sound when passing through pipes
         console.log("POINT!", game_score)
         console.log("UNEQUAL ROD ID", last_rod_id, event.props.rod_id)
         last_rod_id = event.props.rod_id;
@@ -370,7 +378,13 @@ class BirdObject extends GameObject {
 
         // console.log("OBJ", screen.width*this.pos[0], screen.height*this.pos[1])
         
-        if (this.pos[1] > this.auto_thresh) this.vel[1] = this.tap_speed;
+        if (this.pos[1] > this.auto_thresh) {
+            // Bird hit the ground, play a subtle thud sound
+            if (this.vel[1] > 0) { // Only play sound when bird is moving downward
+                soundManager.playSound('collision'); // Reuse collision sound for ground hit
+            }
+            this.vel[1] = this.tap_speed;
+        }
         // if (this.pos[1] > this.auto_thresh) this.vel[1] = -Math.abs(this.vel[1]);
         // if (this.pos[1] < 0) this.vel[1] = Math.abs(this.vel[1]);
         return true;
