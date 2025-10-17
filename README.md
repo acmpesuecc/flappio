@@ -7,8 +7,11 @@ A flappy bird clone that uses html canvas.
 ## Contribution
 
 - Make sure you have [node](https://nodejs.org/en/download)
-1. **Run the frontend**
 
+**Make sure you install the required libraries with this command in the terminal in order to run the code:**
+```npm install express, mongodb, cors```
+
+1. **Run the frontend**
 ```
 node server.js
 ```
