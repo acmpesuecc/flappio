@@ -4,7 +4,7 @@ const cors = require('cors')
 const app = express()
 const MongoClient = require('mongodb').MongoClient
 
-const db_url="mongodb+srv://manavdewangan2017_db_user:O1VDUX2VHorkMIyh@cluster0.aads45s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const db_url="" // You can enter a mongodb url here, preferably by using dotenv
 // app.use(bodyParser.json())
 app.use(express.text())
 // app.use(bodyParser.urlencoded({extended: true}))
