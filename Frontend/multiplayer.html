@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Multiplayer</title>
+    <link rel="stylesheet" href="flappy.css">
+    <link href='https://fonts.googleapis.com/css?family=Fascinate|Erica+One' rel='stylesheet' type='text/css'>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="sounds.js"></script>
+    <script src="multiplayer_simulation.js"></script>
+    <script src="canvas.js"></script>
+    <style>
+        .player-list {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .player-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-width: 200px;
+        }
+
+        .player-item.alive {
+            border-left: 4px solid #44ff44;
+        }
+
+        .player-item.dead {
+            border-left: 4px solid #ff4444;
+            opacity: 0.6;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .player-score {
+            color: #ffeb3b;
+            font-size: 1.2em;
+        }
+
+        .waiting-room {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+            min-width: 400px;
+        }
+
+        .waiting-room h2 {
+            color: #ff9900;
+            margin-bottom: 20px;
+            font-family: 'Fascinate', cursive;
+        }
+
+        .room-code {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.5em;
+            letter-spacing: 3px;
+        }
+
+        .ready-button {
+            background: #44ff44;
+            color: #333;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+
+        .ready-button.ready {
+            background: #ff9900;
+            color: white;
+        }
+
+        .ready-button:hover {
+            transform: scale(1.05);
+        }
+
+        .leave-button {
+            background: #ff4444;
+            color: white;
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+            min-width: 500px;
+        }
+
+        .game-over-screen h2 {
+            color: #ff9900;
+            margin-bottom: 30px;
+            font-family: 'Fascinate', cursive;
+            font-size: 2.5em;
+        }
+
+        .final-scores {
+            margin: 20px 0;
+        }
+
+        .score-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3em;
+        }
+
+        .winner {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <img class="obj clouds1" src="../Sprites/BG_clouds.png" width="100%" height="100%" />
+    <img class="obj clouds2" src="../Sprites/BG_clouds.png" width="100%" height="100%" />
+
+    <img class="obj bgGrass1" src="../Sprites/BG_back.png" width="100%" height="100%" />
+    <img class="obj bgGrass2" src="../Sprites/BG_back.png" width="100%" height="100%" />
+
+    <img class="obj fgGrass1" src="../Sprites/BG_front.png" width="100%" height="100%" />
+    <img class="obj fgGrass2" src="../Sprites/BG_front.png" width="100%" height="100%"/>
+    
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+        const playerName = urlParams.get('name');
+
+        const socket = io('http://localhost:3001');
+
+        function MultiplayerApp() {
+            const [gameState, setGameState] = useState(null);
+            const [isReady, setIsReady] = useState(false);
+            const [gameStarted, setGameStarted] = useState(false);
+            const [gameOver, setGameOver] = useState(false);
+            const [isMuted, setIsMuted] = useState(false);
+            const [volume, setVolume] = useState(0.5);
+            const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+            const gameInitialized = useRef(false);
+
+            useEffect(() => {
+                if (!roomId || !playerName) {
+                    window.location.href = 'lobby.html';
+                    return;
+                }
+
+                // Join the room
+                socket.emit('joinRoom', { roomId, playerName });
+
+                // Socket event listeners
+                socket.on('roomJoined', ({ gameState }) => {
+                    setGameState(gameState);
+                });
+
+                socket.on('playerJoined', ({ gameState }) => {
+                    setGameState(gameState);
+                });
+
+                socket.on('gameStateUpdate', (newGameState) => {
+                    setGameState(newGameState);
+                });
+
+                socket.on('gameStart', ({ startTime, gameState }) => {
+                    setGameStarted(true);
+                    setGameState(gameState);
+                    if (!gameInitialized.current) {
+                        initMultiplayerGame(socket, roomId, playerName);
+                        gameInitialized.current = true;
+                    }
+                });
+
+                socket.on('playerDied', ({ playerId, gameState }) => {
+                    setGameState(gameState);
+                });
+
+                socket.on('gameOver', ({ finalScores }) => {
+                    setGameOver(true);
+                    setGameState(finalScores);
+                });
+
+                socket.on('playerLeft', ({ playerId, gameState }) => {
+                    setGameState(gameState);
+                });
+
+                socket.on('error', ({ message }) => {
+                    alert(message);
+                    window.location.href = 'lobby.html';
+                });
+
+                return () => {
+                    socket.emit('leaveRoom', { roomId });
+                };
+            }, []);
+
+            const toggleReady = () => {
+                const newReady = !isReady;
+                setIsReady(newReady);
+                socket.emit('playerReady', { roomId, ready: newReady });
+            };
+
+            const leaveRoom = () => {
+                socket.emit('leaveRoom', { roomId });
+                window.location.href = 'lobby.html';
+            };
+
+            const playAgain = () => {
+                window.location.reload();
+            };
+
+            const toggleMute = () => {
+                const newMuteState = toggleGameMute();
+                setIsMuted(newMuteState);
+            };
+
+            const handleVolumeChange = (event) => {
+                const newVolume = parseFloat(event.target.value);
+                setVolume(newVolume);
+                setGameVolume(newVolume);
+            };
+
+            if (!gameState) {
+                return <div style={{color: 'white', textAlign: 'center', marginTop: '50px'}}>Loading...</div>;
+            }
+
+            const myPlayer = gameState.players.find(p => p.name === playerName);
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+
+            return (
+                <div>
+                    <canvas id="game-canvas" className="obj" width="100%" height="100%"></canvas>
+                    
+                    {/* Sound controls */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 1000,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: '10px'
+                    }}>
+                        {showVolumeSlider && !isMuted && (
+                            <div style={{
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                padding: '10px',
+                                borderRadius: '5px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <span style={{ color: 'white', fontSize: '12px' }}>Vol:</span>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value={volume}
+                                    onChange={handleVolumeChange}
+                                    style={{ width: '80px' }}
+                                />
+                                <span style={{ color: 'white', fontSize: '12px' }}>{Math.round(volume * 100)}%</span>
+                            </div>
+                        )}
+                        
+                        <button 
+                            onClick={toggleMute}
+                            onMouseEnter={() => setShowVolumeSlider(true)}
+                            onMouseLeave={() => setShowVolumeSlider(false)}
+                            style={{
+                                backgroundColor: isMuted ? '#ff4444' : '#44ff44',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '50px',
+                                height: '50px',
+                                fontSize: '20px',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                            }}
+                        >
+                            {isMuted ? '🔇' : '🔊'}
+                        </button>
+                    </div>
+
+                    {/* Player list */}
+                    <div className="player-list">
+                        <h3 style={{marginBottom: '10px', color: '#ff9900'}}>Players</h3>
+                        {sortedPlayers.map((player, index) => (
+                            <div key={player.id} className={`player-item ${player.alive ? 'alive' : 'dead'}`}>
+                                <span className="player-name">
+                                    {index === 0 && player.alive && gameStarted ? '👑 ' : ''}
+                                    {player.name}
+                                    {player.name === playerName ? ' (You)' : ''}
+                                    {player.ready && !gameStarted ? ' ✓' : ''}
+                                </span>
+                                <span className="player-score">{player.score}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Waiting room */}
+                    {!gameStarted && !gameOver && (
+                        <div className="waiting-room">
+                            <h2>🐦 Waiting Room</h2>
+                            <div className="room-code">
+                                Room Code: <strong>{roomId}</strong>
+                            </div>
+                            <p style={{margin: '20px 0'}}>
+                                Players: {gameState.players.length}/{gameState.maxPlayers}
+                            </p>
+                            <div>
+                                {gameState.players.map(player => (
+                                    <div key={player.id} style={{margin: '10px 0'}}>
+                                        {player.name} {player.ready ? '✓ Ready' : '⏳ Not Ready'}
+                                    </div>
+                                ))}
+                            </div>
+                            <button 
+                                className={`ready-button ${isReady ? 'ready' : ''}`}
+                                onClick={toggleReady}
+                            >
+                                {isReady ? '✓ Ready!' : 'Click when Ready'}
+                            </button>
+                            <button 
+                                className="ready-button leave-button"
+                                onClick={leaveRoom}
+                            >
+                                Leave Room
+                            </button>
+                            <p style={{marginTop: '20px', fontSize: '0.9em', opacity: 0.7}}>
+                                Game starts when all players are ready
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Game over screen */}
+                    {gameOver && (
+                        <div className="game-over-screen">
+                            <h2>🏆 Game Over!</h2>
+                            <div className="final-scores">
+                                {sortedPlayers.map((player, index) => (
+                                    <div key={player.id} className={`score-item ${index === 0 ? 'winner' : ''}`}>
+                                        <span>
+                                            {index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : ''}
+                                            {player.name}
+                                        </span>
+                                        <span>{player.score} points</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="ready-button" onClick={playAgain}>
+                                Play Again
+                            </button>
+                            <button className="ready-button leave-button" onClick={leaveRoom}>
+                                Back to Lobby
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<MultiplayerApp />, document.querySelector('#app'));
+    </script>
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Multiplayer Lobby</title>
+    <link href='https://fonts.googleapis.com/css?family=Fascinate|Erica+One' rel='stylesheet' type='text/css'>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-family: 'Fascinate', cursive;
+            color: #ff9900;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #ff9900;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #e56400;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .room-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .room-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .room-item:hover {
+            background: #e8f4f8;
+            transform: translateX(5px);
+        }
+
+        .room-info {
+            flex: 1;
+        }
+
+        .room-id {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .room-players {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .join-btn {
+            padding: 8px 20px;
+            width: auto;
+            margin: 0;
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .success {
+            background: #44ff44;
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: #ff9900;
+            background: white;
+            color: #ff9900;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            background: #e8f4f8;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const socket = io('http://localhost:3001');
+
+        function LobbyApp() {
+            const [activeTab, setActiveTab] = useState('create');
+            const [playerName, setPlayerName] = useState('');
+            const [maxPlayers, setMaxPlayers] = useState(2);
+            const [roomId, setRoomId] = useState('');
+            const [availableRooms, setAvailableRooms] = useState([]);
+            const [message, setMessage] = useState({ text: '', type: '' });
+            const [currentRoom, setCurrentRoom] = useState(null);
+
+            useEffect(() => {
+                // Socket event listeners
+                socket.on('roomCreated', ({ roomId, gameState }) => {
+                    setMessage({ text: `Room ${roomId} created!`, type: 'success' });
+                    setTimeout(() => {
+                        window.location.href = `multiplayer.html?room=${roomId}&name=${playerName}`;
+                    }, 1000);
+                });
+
+                socket.on('roomJoined', ({ roomId, gameState }) => {
+                    setMessage({ text: `Joined room ${roomId}!`, type: 'success' });
+                    setTimeout(() => {
+                        window.location.href = `multiplayer.html?room=${roomId}&name=${playerName}`;
+                    }, 1000);
+                });
+
+                socket.on('roomsList', (rooms) => {
+                    setAvailableRooms(rooms);
+                });
+
+                socket.on('error', ({ message }) => {
+                    setMessage({ text: message, type: 'error' });
+                });
+
+                // Request room list on mount
+                socket.emit('listRooms');
+
+                // Refresh room list every 3 seconds
+                const interval = setInterval(() => {
+                    socket.emit('listRooms');
+                }, 3000);
+
+                return () => {
+                    clearInterval(interval);
+                };
+            }, []);
+
+            const createRoom = () => {
+                if (!playerName.trim()) {
+                    setMessage({ text: 'Please enter your name', type: 'error' });
+                    return;
+                }
+                socket.emit('createRoom', { playerName: playerName.trim(), maxPlayers });
+            };
+
+            const joinRoom = (roomIdToJoin) => {
+                if (!playerName.trim()) {
+                    setMessage({ text: 'Please enter your name', type: 'error' });
+                    return;
+                }
+                socket.emit('joinRoom', { roomId: roomIdToJoin, playerName: playerName.trim() });
+            };
+
+            const joinRoomById = () => {
+                if (!roomId.trim()) {
+                    setMessage({ text: 'Please enter a room ID', type: 'error' });
+                    return;
+                }
+                joinRoom(roomId.trim().toUpperCase());
+            };
+
+            return (
+                <div className="container">
+                    <h1>🐦 Flappy Bird Multiplayer</h1>
+
+                    {message.text && (
+                        <div className={message.type}>
+                            {message.text}
+                        </div>
+                    )}
+
+                    <div className="section">
+                        <input
+                            type="text"
+                            placeholder="Enter your name"
+                            value={playerName}
+                            onChange={(e) => setPlayerName(e.target.value)}
+                            maxLength={20}
+                        />
+                    </div>
+
+                    <div className="tabs">
+                        <button 
+                            className={`tab ${activeTab === 'create' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('create')}
+                        >
+                            Create Room
+                        </button>
+                        <button 
+                            className={`tab ${activeTab === 'join' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('join')}
+                        >
+                            Join Room
+                        </button>
+                        <button 
+                            className={`tab ${activeTab === 'browse' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('browse')}
+                        >
+                            Browse Rooms
+                        </button>
+                    </div>
+
+                    {activeTab === 'create' && (
+                        <div className="section">
+                            <h2>Create a New Room</h2>
+                            <select 
+                                value={maxPlayers} 
+                                onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                            >
+                                <option value={2}>2 Players</option>
+                                <option value={3}>3 Players</option>
+                                <option value={4}>4 Players</option>
+                            </select>
+                            <button onClick={createRoom}>
+                                Create Room
+                            </button>
+                        </div>
+                    )}
+
+                    {activeTab === 'join' && (
+                        <div className="section">
+                            <h2>Join by Room ID</h2>
+                            <input
+                                type="text"
+                                placeholder="Enter Room ID (e.g., ABC123)"
+                                value={roomId}
+                                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                                maxLength={6}
+                            />
+                            <button onClick={joinRoomById}>
+                                Join Room
+                            </button>
+                        </div>
+                    )}
+
+                    {activeTab === 'browse' && (
+                        <div className="section">
+                            <h2>Available Rooms</h2>
+                            <div className="room-list">
+                                {availableRooms.length === 0 ? (
+                                    <p style={{textAlign: 'center', padding: '20px', color: '#666'}}>
+                                        No rooms available. Create one!
+                                    </p>
+                                ) : (
+                                    availableRooms.map((room) => (
+                                        <div key={room.roomId} className="room-item">
+                                            <div className="room-info">
+                                                <div className="room-id">Room: {room.roomId}</div>
+                                                <div className="room-players">
+                                                    Players: {room.players}/{room.maxPlayers}
+                                                </div>
+                                            </div>
+                                            <button 
+                                                className="join-btn"
+                                                onClick={() => joinRoom(room.roomId)}
+                                            >
+                                                Join
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <button onClick={() => socket.emit('listRooms')}>
+                                🔄 Refresh
+                            </button>
+                        </div>
+                    )}
+
+                    <div style={{marginTop: '30px', textAlign: 'center'}}>
+                        <a href="index.html" style={{color: '#667eea', textDecoration: 'none', fontSize: '1.1em'}}>
+                            ← Back to Single Player
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<LobbyApp />, document.getElementById('app'));
+    </script>
+</body>
+</html>
